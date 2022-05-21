@@ -83,14 +83,18 @@ describe("testing the stories reducer", () => {
 
 describe("test Item component", () => {
   test("render item component", () => {
-    render(<Item item={storyOne} />);
+    render(
+      <BrowserRouter>
+        <Item item={storyOne} />
+      </BrowserRouter>
+    );
   });
 
   test("render item component", () => {
     const mockDeleteFunction = jest.fn();
     const wrapper = ({ children }) => (
       <AppContext.Provider value={{ onClickDelete: mockDeleteFunction }}>
-        {children}
+        <BrowserRouter>{children}</BrowserRouter>
       </AppContext.Provider>
     );
 
@@ -121,7 +125,9 @@ describe("test Input with label component", () => {
       onChange: jest.fn(),
       searchText: "React",
     };
-    const { container } = render(<InputWithLabel id={""} {...inputWithLabelProps} />);
+    const { container } = render(
+      <InputWithLabel id={""} {...inputWithLabelProps} />
+    );
     expect(container.firstChild).toMatchSnapshot();
   });
   test("check if on change is called", () => {
