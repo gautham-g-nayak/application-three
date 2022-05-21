@@ -5,7 +5,6 @@ import logo from "./assets/logo.png";
 import usePersistence from "./hooks/usePersistence";
 import React, {
   useEffect,
-  useMemo,
   useReducer,
   useCallback,
   createContext,
@@ -13,8 +12,9 @@ import React, {
 } from "react";
 import axios from "axios";
 import { useDebounce } from "./hooks/useDebounce";
-import { StateType, StoryType, ActionType } from "./types";
+import { StateType, ActionType } from "./types";
 import ReactPaginate from "react-paginate";
+import useSession from "./hooks/useSession";
 
 export const title: string = "React Training";
 
@@ -48,7 +48,7 @@ function App(): JSX.Element {
   const [searchText, setSearchText] = usePersistence("searchTerm", "");
   const debouncedUrl = useDebounce(API_ENDPOINT + searchText);
   const [totalPage, setTotalPage] = useState(0);
-  const [currentPage, setCurrentPage] = useState(0);
+  const [currentPage, setCurrentPage] = useSession("currentPage", 0);
 
   const [stories, dispatchStories] = useReducer(storiesReducer, {
     data: [],
@@ -85,7 +85,7 @@ function App(): JSX.Element {
     dispatchStories({ type: "REMOVE_STORY", payload: { id: objectId } });
   }, []);
 
-  function handlePageChange(event: { selected: React.SetStateAction<number> }) {
+  function handlePageChange(event: { selected: number; }) {
     setCurrentPage(event.selected);
   }
 
