@@ -13,7 +13,8 @@ import React, {
 import axios from "axios";
 import { useDebounce } from "./hooks/useDebounce";
 import { StateType, ActionType } from "./types";
-import InfiniteScroll from "react-infinite-scroll-component";
+import ReactPaginate from "react-paginate";
+import useSession from "./hooks/useSession";
 
 export const title: string = "React Training";
 
@@ -22,7 +23,7 @@ export function storiesReducer(state: StateType, action: ActionType) {
     case "SET_STORIES":
       return { data: action.payload.data, isError: false, isLoading: false };
     case "INIT_FETCH":
-      return { ...state, isLoading: false, isError: false };
+      return { ...state, isLoading: true, isError: false };
     case "FETCH_FAILURE":
       return { ...state, isLoading: false, isError: true };
     case "REMOVE_STORY":
@@ -47,8 +48,7 @@ function App(): JSX.Element {
   const [searchText, setSearchText] = usePersistence("searchTerm", "");
   const debouncedUrl = useDebounce(API_ENDPOINT + searchText);
   const [totalPage, setTotalPage] = useState(0);
-  const [currentPage, setCurrentPage] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useSession("currentPage", 0);
 
   const [stories, dispatchStories] = useReducer(storiesReducer, {
     data: [],
@@ -59,18 +59,18 @@ function App(): JSX.Element {
   const handleFetchStories = useCallback(async () => {
     dispatchStories({ type: "INIT_FETCH" });
     try {
-      const response = await axios.get(debouncedUrl);
+      const response = await axios.get(debouncedUrl, {
+        params: { page: currentPage },
+      });
       setTotalPage(response.data.nbPages);
-      setCurrentPage(0);
       dispatchStories({
         type: "SET_STORIES",
         payload: { data: response.data.hits },
       });
-      setIsLoading(false);
     } catch {
       dispatchStories({ type: "FETCH_FAILURE" });
     }
-  }, [debouncedUrl]);
+  }, [debouncedUrl, currentPage]);
 
   useEffect(() => {
     handleFetchStories();
@@ -85,19 +85,8 @@ function App(): JSX.Element {
     dispatchStories({ type: "REMOVE_STORY", payload: { id: objectId } });
   }, []);
 
-  async function fetchMoreData() {
-    setCurrentPage(currentPage + 1);
-    try {
-      const response = await axios.get(debouncedUrl, {
-        params: { page: currentPage + 1 },
-      });
-      dispatchStories({
-        type: "SET_STORIES",
-        payload: { data: stories.data.concat(response.data.hits) },
-      });
-    } catch {
-      dispatchStories({ type: "FETCH_FAILURE" });
-    }
+  function handlePageChange(event: { selected: number }) {
+    setCurrentPage(event.selected);
   }
 
   if (stories.isError) {
@@ -123,20 +112,24 @@ function App(): JSX.Element {
           Search
         </InputWithLabel>
       </nav>
-      {isLoading ? (
+      {stories.isLoading ? (
         <h1 style={{ marginTop: "10rem" }}>Loading</h1>
       ) : (
         <div>
           <AppContext.Provider value={{ onClickDelete: handleDeleteClick }}>
-            <InfiniteScroll
-              dataLength={stories.data.length}
-              next={fetchMoreData}
-              hasMore={currentPage !== totalPage}
-              loader={<h4>Loading...</h4>}
-            >
-              <List listOfItems={stories.data} />
-            </InfiniteScroll>
+            <List listOfItems={stories.data} />
           </AppContext.Provider>
+          <div style={{ padding: "45px" }}></div>
+          <ReactPaginate
+            pageCount={totalPage}
+            nextLabel=">"
+            previousLabel="<"
+            breakLabel="..."
+            forcePage={currentPage}
+            className={styles.pagination}
+            onPageChange={handlePageChange}
+            activeClassName={styles.active}
+          />
         </div>
       )}
     </div>
