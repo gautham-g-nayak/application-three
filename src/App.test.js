@@ -5,6 +5,7 @@ import App, { AppContext } from "./App";
 import { BrowserRouter } from "react-router-dom";
 import InputWithLabel from "./components/InputWithLabel";
 import axios from "axios";
+import RawContent from "./pages/RawContent";
 
 describe("unit testing basics", () => {
   test("assert if title is React", () => {
@@ -81,7 +82,15 @@ describe("testing the stories reducer", () => {
 
 //unit testing of components
 
-describe("test Item component", () => {
+describe("testing component", () => {
+  test("render raw content component", () => {
+    render(
+      <BrowserRouter>
+        <RawContent />
+      </BrowserRouter>
+    );
+  });
+
   test("render item component", () => {
     render(
       <BrowserRouter>

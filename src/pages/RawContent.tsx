@@ -6,7 +6,7 @@ const RawContent = () => {
 
   return (
     <div>
-      <pre>{JSON.stringify(location.state.item, null, 2) }</pre>
+      <pre>{JSON.stringify(location.state?.item, null, 2)}</pre>
     </div>
   );
 };
